@@ -1047,5 +1047,7 @@
   "incubated": "Aplikace vznikla\nv inkubátoru",
   "@incubated": {},
   "too_early_checkup": "Ještě není čas se objednat",
-  "@too_early_checkup": {}
+  "@too_early_checkup": {},
+   "learn_how_to_care_about_health": "Naučíme tě, jak se starat o zdraví",
+  "@learn_how_to_care_about_health": {}
 }
