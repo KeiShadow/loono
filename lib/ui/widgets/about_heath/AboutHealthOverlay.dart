@@ -18,7 +18,8 @@ class AboutHealthOverlay extends StatefulWidget {
 
 class _AboutHealthOverlayState extends State<AboutHealthOverlay> {
   final RestApiBloc _cmsBloc = RestApiBloc();
-
+  final ScrollController _horizontalScrollController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
   @override
   void initState() {
     // TODO: implement initState
@@ -48,69 +49,44 @@ class _AboutHealthOverlayState extends State<AboutHealthOverlay> {
                   );
                 }
               },
-              child: BlocBuilder<RestApiBloc, RestApiState>(
-                builder: (context, state) {
-                  if (state is LoadingState) {
-                    return _buildLoading();
-                  } else if (state is AboutHeathCategories) {
-                    return AvatarBubbleNotifier(
-                      convertExtent: widget.convertExtent,
-                      child: Container(
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(12),
-                            topRight: Radius.circular(12),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8.0),
-                              child: Container(
-                                height: 15,
-                                width: 150,
-                                decoration: const BoxDecoration(
-                                  color: LoonoColors.primary,
-                                  borderRadius: BorderRadius.all(Radius.elliptical(20, 20)),
+              child: AvatarBubbleNotifier(
+                convertExtent: widget.convertExtent,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    child: BlocBuilder<RestApiBloc, RestApiState>(
+                      builder: (context, state) {
+                        if (state is LoadingState) {
+                          return _buildLoading();
+                        } else if (state is AboutHeathCategories) {
+                          return Column(
+                            children: [
+                              _buildHandle(context),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 8.0,
+                                  top: 8.0,
+                                  bottom: 8.0,
                                 ),
+                                child: _buildTitle('Prevence zdravi'),
                               ),
-                            ),
-                            const Align(
-                              alignment: Alignment.centerLeft,
-                              child: Padding(
-                                padding: EdgeInsets.only(left: 8.0, top: 8.0, bottom: 8.0),
-                                child: Text(
-                                  'Prevence zdraví',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w400,
-                                    fontSize: 32,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: ListView.builder(
-                                controller: scrollController,
-                                itemBuilder: (context, index) {
-                                  final category = state.categories?[index];
+                              _buildCategoriesSection(state, scrollController)
+                            ],
+                          );
+                        }
 
-                                  return _buildCategory(category);
-                                  // return Container();
-                                },
-                                itemCount: state.categories?.length,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return Container();
-                },
+                        return Container();
+                      },
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -121,45 +97,136 @@ class _AboutHealthOverlayState extends State<AboutHealthOverlay> {
 
   Widget _buildLoading() => const Center(child: CircularProgressIndicator());
 
+  Widget _buildCategoriesSection(AboutHeathCategories state, ScrollController controller) =>
+      ListView.builder(
+        shrinkWrap: true,
+        controller: _verticalScrollController,
+        itemBuilder: (context, index) {
+          final category = state.categories?[index];
+          // return const SizedBox(height: 150, child: Text('Ahoj'));
+          return _buildCategory(category);
+        },
+        itemCount: state.categories?.length,
+      );
+
   Widget _buildCategory(Category? category) => Column(
-        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Text(
-                  category?.categoryTitle ?? '',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w400,
-                    fontSize: 19,
-                  ),
+              Text(
+                category?.categoryTitle ?? '',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontSize: 19,
                 ),
               ),
+
               //TODO: Arrows
             ],
           ),
-          // _buildArticle(category?.articles)
+          _buildArticle(category?.articles)
         ],
       );
 
+  List<String> testMoc = List<String>.generate(10000, (i) => 'Item $i');
+
   Widget _buildArticle(List<Article>? articles) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: articles?.length,
-      scrollDirection: Axis.horizontal,
-      itemBuilder: (context, index) {
-        final article = articles?[index];
-        return _buildArticleCard(article);
-      },
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        controller: _horizontalScrollController,
+        shrinkWrap: true,
+        physics: const ClampingScrollPhysics(),
+        itemBuilder: (contetxt, index) {
+          final article = articles?[index];
+          //return Container();
+          return _buildArticleCard(article);
+        },
+        itemCount: articles?.length,
+        scrollDirection: Axis.horizontal,
+      ),
     );
+
+    // return SingleChildScrollView(
+    //   controller: _horizontalScrollController,
+    //   child: Row(children: testMoc.map<Widget>((e) => Text(e)).toList()),
+
+    //   //child: Row(children: articles?.map(_buildArticleCard).toList() ?? []),
+    // );
+
+    /*
+    ListView.builder(
+        itemCount: articles?.length,
+        itemBuilder: ((context, index) {
+        return _buildArticleCard(articles?[index]);
+      })*/
+    // ListView.builder(
+    //   itemCount: articles?.length,
+    //   controller: _horizontalScrollController,
+    //   scrollDirection: Axis.horizontal,
+    //   shrinkWrap: true,
+    //   itemBuilder: (context, index) {
+    //     final article = articles?[index];
+    //     return const Text('Jsem clanek');
+    //     //return _buildArticleCard(article);
+    //   },
+    // );
   }
 
   Widget _buildArticleCard(Article? article) {
-    return SizedBox(
-      height: 150,
-      child: Container(),
+    final title = article?.articleTitle ?? '';
+    return Container(
+      decoration: const BoxDecoration(borderRadius: BorderRadius.all(Radius.elliptical(20, 20))),
+      height: 100,
+      width: MediaQuery.of(context).size.width / 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          //TODO Card with image
+          Text(title),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitle(String title) => Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 32,
+          ),
+        ),
+      );
+
+  Widget _buildHandle(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Container(
+          height: 10,
+          width: 100,
+          decoration: const BoxDecoration(
+            color: LoonoColors.primary,
+            borderRadius: BorderRadius.all(Radius.elliptical(20, 20)),
+          ),
+        ),
+      );
+
+  void _scrollRight() {
+    _horizontalScrollController.animateTo(
+      _horizontalScrollController.position.maxScrollExtent,
+      duration: const Duration(seconds: 1),
+      curve: Curves.fastOutSlowIn,
+    );
+  }
+
+  void _scrollLeft() {
+    _horizontalScrollController.animateTo(
+      0,
+      duration: const Duration(seconds: 1),
+      curve: Curves.fastOutSlowIn,
     );
   }
 }
